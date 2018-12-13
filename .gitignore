@@ -1,0 +1,6 @@
+log/
+model/
+pretrained_model/
+test/
+__pycache__/
+.idea/
