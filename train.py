@@ -8,6 +8,7 @@ import os
 import random
 from cycle_gan import Generator, Discriminator
 from scipy.misc import imsave
+import argparse
 
 
 class ImagePool(object):
@@ -105,7 +106,7 @@ def save_image(image_tensor, path, pre):
     imsave(os.path.join(pre, path), image)
 
 
-def train(x_path, y_path, image_size=128, log_path='./log', test_path='./test', model_path='./model'):
+def train(x_path, y_path, image_size=128, log_path='./log', model_path='./model'):
     batch_size = 1
     learning_rate = 0.0002
     max_epoch = 200
@@ -202,29 +203,15 @@ def train(x_path, y_path, image_size=128, log_path='./log', test_path='./test', 
                                 loss_D_x.item(), loss_D_y.item()))
 
             if i + 1 == len(dataloader):
-                save_image(x[0], 'real_x_{}.jpg'.format(epoch), pre=log_path)
-                save_image(y[0], 'real_y_{}.jpg'.format(epoch), pre=log_path)
-                save_image(fake_y[0], 'fake_y_{}.jpg'.format(epoch), pre=log_path)
-                save_image(rec_x[0], 'rec_x_{}.jpg'.format(epoch), pre=log_path)
-                save_image(fake_x[0], 'fake_x_{}.jpg'.format(epoch), pre=log_path)
-                save_image(rec_y[0], 'rec_y_{}.jpg'.format(epoch), pre=log_path)
+                save_image(x[0], 'real_x_{}.jpg'.format(epoch), log_path)
+                save_image(y[0], 'real_y_{}.jpg'.format(epoch), log_path)
+                save_image(fake_y[0], 'fake_y_{}.jpg'.format(epoch), log_path)
+                save_image(rec_x[0], 'rec_x_{}.jpg'.format(epoch), log_path)
+                save_image(fake_x[0], 'fake_x_{}.jpg'.format(epoch), log_path)
+                save_image(rec_y[0], 'rec_y_{}.jpg'.format(epoch), log_path)
 
         scheduler_G.step()
         scheduler_D.step()
-
-        # for i in range(5):
-        #     x, y = dataset[i]
-        #     if x.shape[0] != 3 or y.shape[0] != 3:
-        #         continue
-        #     x = torch.unsqueeze(x, 0)
-        #     y = torch.unsqueeze(y, 0)
-        #     x, y = x.float().to(device), y.float().to(device)
-        #     fake_y = G_x(x)
-        #     fake_x = G_y(y)
-        #     save_image(x[0], 'real_x_{}_{}.jpg'.format(epoch, i), pre=test_path)
-        #     save_image(y[0], 'real_y_{}_{}.jpg'.format(epoch, i), pre=test_path)
-        #     save_image(fake_x[0], 'fake_x_{}_{}.jpg'.format(epoch, i), pre=test_path)
-        #     save_image(fake_y[0], 'fake_y_{}_{}.jpg'.format(epoch, i), pre=test_path)
 
         if epoch % 20 == 0:
             torch.save(G_x.state_dict(), os.path.join(model_path, 'G_x_{}.pth'.format(epoch)))
@@ -239,6 +226,10 @@ def train(x_path, y_path, image_size=128, log_path='./log', test_path='./test', 
 
 
 if __name__ == '__main__':
-    # train('/data1/thesis2018_code/dataset/AFLW2000-3D/AFLW2000',
-    #       '/data1/amime_image/animeface-character-dataset/thumb/')
-    train('/data1/amime_image/monet2photo/trainA', '/data1/amime_image/monet2photo/trainB', image_size=256)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--xpath', '-x', help='Path to training set, x style of images', required=True)
+    parser.add_argument('--ypath', '-y', help='Path to training set, y style of images', required=True)
+    parser.add_argument('--size', '-s', help='image size', required=False, type=int, default=256)
+    args = parser.parse_args()
+
+    train(args.xpath, args.ypath, image_size=args.size)
